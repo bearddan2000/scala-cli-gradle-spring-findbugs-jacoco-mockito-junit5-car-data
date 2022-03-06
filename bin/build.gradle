@@ -1,0 +1,88 @@
+/*
+    gradle clean build bootRun
+*/
+
+buildscript {
+  repositories { jcenter() }
+  dependencies { classpath "org.springframework.boot:spring-boot-gradle-plugin:2.4.2" }
+}
+
+plugins {
+  id 'com.github.ben-manes.versions' version '0.13.0' // gradle dependencyUpdates
+
+  // we don’t need to *apply* the plugin to the root project, do we?
+  id 'com.github.spotbugs' version '4.7.0' apply false
+}
+
+apply plugin: 'scala'
+apply plugin: 'jacoco'
+
+targetCompatibility = sourceCompatibility = JavaVersion.VERSION_1_8
+
+group = group
+
+jar {
+  version = version
+  baseName = baseName
+}
+
+repositories {
+  jcenter()
+  mavenCentral()
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        csv.enabled true
+        html.destination file("${buildDir}/reports/html/jacoco")
+        xml.destination file("${buildDir}/reports/xml/jacoco")
+        csv.destination file("${buildDir}/reports/csv/jacoco")
+    }
+}
+
+test {
+    reports {
+        html.enabled = true
+    }
+
+    // Enable JUnit 5 (Gradle 4.6+).
+    useJUnitPlatform()
+
+    // Always run tests, even when nothing changed.
+    //dependsOn 'cleanTest'
+
+    // Show test results.
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+dependencies {
+  implementation "org.scala-lang:scala-library:2.12.10"
+  implementation "org.springframework:spring-context:5.0.1.RELEASE"
+
+  testImplementation "org.mockito:mockito-core:3.+"
+  testImplementation 'org.mockito:mockito-junit-jupiter:2.23.0'
+  testImplementation "org.springframework:spring-test:5.0.1.RELEASE"
+  testImplementation platform("org.junit:junit-bom:5.8.1")
+  testImplementation 'org.junit.platform:junit-platform-suite'
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+
+}
+
+apply plugin: 'com.github.spotbugs'
+spotbugs {
+    toolVersion = '4.2.2'
+    ignoreFailures = true
+    reportsDir = file("$project.buildDir/reports/findbugs")
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+defaultTasks "clean", "build"
